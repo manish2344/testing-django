@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Product List
+{% endblock %}
+
+{% block content %}
+    <h1 class="mt-5">Product List</h1>
+    <ul class="list-group mt-3">
+        {% for product in products %}
+            <li class="list-group-item">
+                <h3>{{ product.name }}</h3>
+                <p>Description: {{ product.description }}</p>
+                <p>Price: ${{ product.price }}</p>
+                <p>Category: {{ product.category.name }}</p>
+                <form method="post" action="{% url 'add_to_cart' product.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">Add to Cart</button>
+                </form>
+            </li>
+        {% empty %}
+            <li class="list-group-item">No products available.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

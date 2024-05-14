@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    View Cart
+{% endblock %}
+
+{% block content %}
+    <h1 class="mt-5">View Cart</h1>
+    <div class="table-responsive mt-3">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Action</th>  <!-- Add Action column for delete button -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart_items %}
+                <tr>
+                    <td>{{ item.product.name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>${{ item.price }}</td>
+                    <td>
+                        <form action="{% url 'delete_from_cart' item.id %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4">No items in the cart.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <a href="{% url 'product_list' %}" class="btn btn-primary">Continue Shopping</a>
+{% endblock %}
