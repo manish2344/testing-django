@@ -1,33 +1,67 @@
-# tests/test_views.py
 from django.test import TestCase, Client
 from django.urls import reverse
+# from .models import Product, OrderItem, Order, Category, Review
+from globalapp.models import Product, OrderItem, Order, Category, Review
+from django.contrib.auth.models import User
+# from .forms import ProductForm
+from globalapp.forms import ProductForm
+class TestViews(TestCase):
 
-class MyViewTestCase(TestCase):
     def setUp(self):
         self.client = Client()
+        self.user = User.objects.create_user(
+            username='testuser', email='test@example.com', password='testpassword')
+        self.category = Category.objects.create(
+            name='Test Category', description='Test Description')
+        self.product = Product.objects.create(
+            name='Test Product', description='Test Description', price=10.00, category=self.category)
 
-    def test_my_view_success(self):
-        # Test a successful GET request to the view
-        response = self.client.get(reverse('my-view'))
+    def test_home_view(self):
+        response = self.client.get(reverse('home'))
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'home.html')
 
-    def test_my_view_not_found(self):
-        # Test for a non-existent URL
-        response = self.client.get('/non-existent-url/')
-        self.assertEqual(response.status_code, 404)
+    # Add similar test methods for other views...
 
-    def test_my_view_internal_server_error(self):
-        # Test for an intentional internal server error in the view
-        response = self.client.get(reverse('error-view'))
-        self.assertEqual(response.status_code, 500)
+    def test_add_product_view(self):
+        self.client.login(username='testuser', password='testpassword')
+        response = self.client.post(reverse('add_product'), {'name': 'New Product', 'description': 'New Description', 'price': 20.00, 'category': self.category.id})
+        self.assertEqual(response.status_code, 302)  # Redirect status code
+        self.assertTrue(Product.objects.filter(name='New Product').exists())
 
-    def test_my_view_bad_request(self):
-        # Test for a POST request with invalid data
-        data = {'invalid_field': 'Invalid Data'}
-        response = self.client.post(reverse('my-view'), data)
-        self.assertEqual(response.status_code, 400)
+    # def test_product_list_view(self):
+    #     response = self.client.get(reverse('product_list'))
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertTemplateUsed(response, 'product_list.html')
+    #     self.assertQuerysetEqual(response.context['products'], ['<Product: Test Product>'])
+def test_product_list_view(self):
+    # Access the view
+    response = self.client.get(reverse('product_list'))
 
-    def test_my_view_permission_denied(self):
-        # Test for accessing a view that requires authentication
-        response = self.client.get(reverse('secured-view'))
-        self.assertEqual(response.status_code, 403)
+    # Check the status code
+    self.assertEqual(response.status_code, 200)
+
+    # Check if products are present in the context
+    self.assertIn('products', response.context)
+
+    # Get the queryset from the response context
+    products_queryset = response.context['products']
+
+    # Print the queryset for debugging
+    print("Products queryset:", products_queryset)
+
+    # Check if the queryset is not empty
+    self.assertTrue(products_queryset.exists())
+
+    # Compare the product names in the queryset with the expected names
+    expected_product_names = ['Test Product']
+    actual_product_names = [str(product) for product in products_queryset]
+    self.assertListEqual(actual_product_names, expected_product_names)
+
+    def test_add_to_cart_view(self):
+        self.client.login(username='testuser', password='testpassword')
+        response = self.client.get(reverse('add_to_cart', args=[self.product.id]))
+        self.assertEqual(response.status_code, 302)  # Redirect status code
+        self.assertTrue(OrderItem.objects.filter(product=self.product).exists())
+
+    # Add similar test methods for other views...
